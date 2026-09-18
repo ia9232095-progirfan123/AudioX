@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>An Experience Awaits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+  /* ============================================================
+     AUDIO CONFIGURATION
+     To change the audio file: edit AUDIO_CONFIG.src in the
+     <script> block near the bottom of this file, or simply
+     replace the file named "audio.mp3" that sits next to this
+     index.html file.
+     ============================================================ */
+
+  :root{
+    --bg-0:#07070a;
+    --bg-1:#121017;
+    --bg-2:#1b1722;
+    --gold:#c9a05b;
+    --gold-soft:#e8c98a;
+    --ink:#f3ede2;
+    --ink-dim:#a89f92;
+    --ink-faint:#5f594f;
+    --line:rgba(201,160,91,0.18);
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;
+    overflow-x:hidden;
+    background:var(--bg-0);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
+  }
+
+  .stage{
+    position:relative;
+    width:100%;
+    min-height:100svh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  /* ---------- ambient background ---------- */
+  .ambient{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 18%, rgba(201,160,91,0.10), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 80% 90%, rgba(60,40,90,0.20), transparent 65%),
+      radial-gradient(ellipse 70% 60% at 10% 85%, rgba(30,50,90,0.14), transparent 65%),
+      linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 55%, var(--bg-2) 100%);
+    transition:filter 1.4s var(--ease);
+  }
+  body.playing .ambient{ filter:saturate(1.25) brightness(1.06); }
+
+  .rays{
+    position:fixed; inset:-10%; z-index:0; pointer-events:none;
+    background:conic-gradient(from 200deg at 50% 0%, transparent 0deg, rgba(201,160,91,0.06) 8deg, transparent 20deg, transparent 340deg, rgba(201,160,91,0.05) 352deg, transparent 360deg);
+    animation:sweep 40s linear infinite;
+    opacity:0.8;
+  }
+  @keyframes sweep{ to{ transform:rotate(360deg); } }
+
+  canvas#particles{
+    position:fixed; inset:0; z-index:0; width:100%; height:100%; pointer-events:none;
+  }
+
+  /* ---------- shared layout ---------- */
+  .screen{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+    padding:8vh 6vw;
+    z-index:1;
+    transition:opacity 1s var(--ease), transform 1s var(--ease), visibility 1s;
+  }
+
+  /* ================= SCREEN 1 : INTRO ================= */
+  #screen-intro{ text-align:center; }
+
+  .eyebrow{
+    font-size:0.72rem;
+    letter-spacing:0.32em;
+    color:var(--ink-dim);
+    font-weight:500;
+    margin-bottom:1.6rem;
+    opacity:0;
+    animation:rise 1s var(--ease) 0.2s forwards;
+  }
+
+  .headline{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:400;
+    font-size:clamp(2.6rem, 9vw, 5.4rem);
+    letter-spacing:0.06em;
+    line-height:1.05;
+    margin:0 0 1.4rem 0;
+    background:linear-gradient(180deg, #fff 0%, var(--gold-soft) 55%, var(--gold) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    opacity:0;
+    animation:rise 1.1s var(--ease) 0.4s forwards;
+  }
+
+  .subtext{
+    font-weight:300;
+    font-size:clamp(0.9rem, 1.6vw, 1.05rem);
+    color:var(--ink-dim);
+    letter-spacing:0.02em;
+    margin-bottom:4.2rem;
+    opacity:0;
+    animation:rise 1s var(--ease) 0.6s forwards;
+  }
+
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* ---------- START button ---------- */
+  .start-wrap{
+    position:relative;
+    width:min(46vw, 220px);
+    aspect-ratio:1/1;
+    opacity:0;
+    animation:rise 1.1s var(--ease) 0.85s forwards;
+  }
+
+  .ring{
+    position:absolute; inset:-14%;
+    border-radius:50%;
+    border:1px solid var(--line);
+    animation:spin 14s linear infinite;
+  }
+  .ring.r2{ inset:-26%; border-color:rgba(201,160,91,0.10); animation-duration:22s; animation-direction:reverse; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .pulse{
+    position:absolute; inset:0; border-radius:50%;
+    box-shadow:0 0 0 0 rgba(201,160,91,0.35);
+    animation:pulse 2.6s var(--ease) infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(201,160,91,0.28); }
+    70%{ box-shadow:0 0 0 26px rgba(201,160,91,0); }
+    100%{ box-shadow:0 0 0 0 rgba(201,160,91,0); }
+  }
+
+  #startBtn{
+    position:absolute; inset:0;
+    border-radius:50%;
+    border:1px solid rgba(201,160,91,0.55);
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.10), transparent 55%),
+      linear-gradient(155deg, #1c1a20 0%, #100e13 70%);
+    color:var(--gold-soft);
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:clamp(0.95rem, 2vw, 1.15rem);
+    letter-spacing:0.28em;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    min-width:64px; min-height:64px;
+    -webkit-tap-highlight-color:transparent;
+    transition:transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s var(--ease), background 0.5s var(--ease);
+    box-shadow:0 0 40px rgba(201,160,91,0.08), inset 0 0 24px rgba(0,0,0,0.5);
+  }
+  #startBtn span{ transform:translateX(6%); pointer-events:none; }
+  #startBtn:hover{
+    transform:scale(1.045);
+    border-color:var(--gold-soft);
+    box-shadow:0 0 60px rgba(201,160,91,0.22), inset 0 0 24px rgba(0,0,0,0.5);
+  }
+  #startBtn:active{ transform:scale(0.97); }
+  #startBtn:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:6px; }
+
+  .intro-error{
+    margin-top:2rem;
+    font-size:0.85rem;
+    color:#d98a6b;
+    max-width:340px;
+    opacity:0;
+    transition:opacity 0.4s var(--ease);
+  }
+  .intro-error.show{ opacity:1; }
+
+  /* ================= SCREEN 2 : PLAYER ================= */
+  #screen-player{
+    opacity:0; visibility:hidden; transform:translateY(18px);
+    pointer-events:none;
+  }
+  body.playing #screen-player{
+    opacity:1; visibility:visible; transform:translateY(0);
+    pointer-events:auto;
+  }
+  body.playing #screen-intro{
+    opacity:0; visibility:hidden; transform:translateY(-18px);
+    pointer-events:none;
+  }
+
+  .status-label{
+    font-size:0.7rem;
+    letter-spacing:0.3em;
+    color:var(--ink-dim);
+    margin-bottom:0.6rem;
+    display:flex; align-items:center; gap:0.6rem;
+  }
+  .status-dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 8px var(--gold);
+  }
+  .status-dot.paused{ background:var(--ink-faint); box-shadow:none; }
+
+  .track-title{
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(1.6rem, 4vw, 2.3rem);
+    font-weight:400;
+    color:var(--ink);
+    margin:0 0 3rem 0;
+    letter-spacing:0.03em;
+  }
+
+  #viz{
+    width:min(78vw, 340px);
+    height:min(78vw, 340px);
+    max-width:340px; max-height:340px;
+    display:block;
+    margin-bottom:3rem;
+  }
+
+  .glass-panel{
+    display:flex;
+    align-items:center;
+    gap:1.4rem;
+    padding:0.9rem 1.4rem;
+    border-radius:100px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    box-shadow:0 10px 40px rgba(0,0,0,0.35);
+  }
+
+  .ctrl-btn{
+    width:46px; height:46px;
+    border-radius:50%;
+    border:1px solid rgba(201,160,91,0.35);
+    background:transparent;
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:background 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.2s var(--ease);
+    flex-shrink:0;
+  }
+  .ctrl-btn:hover{ background:rgba(201,160,91,0.12); border-color:var(--gold-soft); }
+  .ctrl-btn:active{ transform:scale(0.92); }
+  .ctrl-btn:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:3px; }
+  .ctrl-btn svg{ width:18px; height:18px; }
+
+  #playToggle{
+    width:54px; height:54px;
+    border-color:var(--gold);
+    color:var(--gold-soft);
+  }
+
+  .vol-wrap{ display:flex; align-items:center; gap:0.6rem; }
+  .vol-wrap svg{ width:16px; height:16px; color:var(--ink-dim); flex-shrink:0; }
+
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none;
+    width:84px; height:3px;
+    background:rgba(255,255,255,0.14);
+    border-radius:2px;
+    outline:none;
+    cursor:pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:13px; height:13px; border-radius:50%;
+    background:var(--gold-soft);
+    box-shadow:0 0 8px rgba(201,160,91,0.6);
+    cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:13px; height:13px; border-radius:50%; border:none;
+    background:var(--gold-soft);
+    box-shadow:0 0 8px rgba(201,160,91,0.6);
+    cursor:pointer;
+  }
+
+  .fallback-note{
+    margin-top:1.6rem;
+    font-size:0.75rem;
+    color:var(--ink-faint);
+    text-align:center;
+    max-width:280px;
+  }
+
+  @media (max-width:420px){
+    .glass-panel{ gap:0.9rem; padding:0.8rem 1.1rem; }
+    .vol-wrap{ display:none; }
+    #viz{ width:min(84vw, 300px); height:min(84vw, 300px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div class="rays"></div>
+<canvas id="particles"></canvas>
+
+<!-- ================= SCREEN 1 ================= -->
+<section class="screen" id="screen-intro">
+  <p class="eyebrow">AN EXPERIENCE AWAITS</p>
+  <h1 class="headline">PRESS START</h1>
+  <p class="subtext">Tap below to begin</p>
+
+  <div class="start-wrap">
+    <div class="ring"></div>
+    <div class="ring r2"></div>
+    <div class="pulse"></div>
+    <button id="startBtn" aria-label="Start the experience">
+      <span>START</span>
+    </button>
+  </div>
+
+  <p class="intro-error" id="introError" role="alert"></p>
+</section>
+
+<!-- ================= SCREEN 2 ================= -->
+<section class="screen" id="screen-player" aria-hidden="true">
+  <p class="status-label">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">NOW PLAYING</span>
+  </p>
+  <h2 class="track-title">The Experience</h2>
+
+  <canvas id="viz" width="340" height="340"></canvas>
+
+  <div class="glass-panel">
+    <button class="ctrl-btn" id="restartBtn" aria-label="Restart audio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-9.36L1 10"></path></svg>
+    </button>
+
+    <button class="ctrl-btn" id="playToggle" aria-label="Pause audio">
+      <svg id="iconPause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>
+      <svg id="iconPlay" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M8 5v14l11-7z"></path></svg>
+    </button>
+
+    <div class="vol-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9"></polygon><path d="M17 8a5 5 0 0 1 0 8"></path></svg>
+      <input type="range" id="volumeSlider" min="0" max="100" value="100" aria-label="Volume">
+    </div>
+  </div>
+
+  <p class="fallback-note" id="fallbackNote" style="display:none">
+    Playing in fallback mode — visualization reacts to a simulated pattern because this browser blocked audio analysis.
+  </p>
+</section>
+
+<audio id="audioEl" preload="auto" loop></audio>
+
+<script>
+/* ============================================================
+   AUDIO CONFIGURATION
+   Change these values to customize playback. To swap the audio
+   file, replace "audio.mp3" next to this HTML file, or edit
+   the `src` value below to point somewhere else.
+   ============================================================ */
+const AUDIO_CONFIG = {
+  src: "audio.mp3",   // path to the audio file, relative to this HTML file
+  loop: true,          // loop playback continuously
+  volume: 1.0          // 0.0 - 1.0 (starts at 100%)
+};
+
+(function(){
+  const audioEl      = document.getElementById('audioEl');
+  const startBtn      = document.getElementById('startBtn');
+  const introError     = document.getElementById('introError');
+  const playToggle     = document.getElementById('playToggle');
+  const iconPlay       = document.getElementById('iconPlay');
+  const iconPause      = document.getElementById('iconPause');
+  const restartBtn     = document.getElementById('restartBtn');
+  const volumeSlider   = document.getElementById('volumeSlider');
+  const statusDot      = document.getElementById('statusDot');
+  const statusText     = document.getElementById('statusText');
+  const fallbackNote   = document.getElementById('fallbackNote');
+  const vizCanvas      = document.getElementById('viz');
+  const vizCtx         = vizCanvas.getContext('2d');
+
+  audioEl.src    = AUDIO_CONFIG.src;
+  audioEl.loop   = AUDIO_CONFIG.loop;
+  audioEl.volume = AUDIO_CONFIG.volume;
+  volumeSlider.value = Math.round(AUDIO_CONFIG.volume * 100);
+
+  let audioCtx, analyser, sourceNode, dataArray;
+  let useFallbackViz = false;
+  let rafId = null;
+
+  function showIntroError(msg){
+    introError.textContent = msg;
+    introError.classList.add('show');
+  }
+
+  function setupAnalyser(){
+    try{
+      if(!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        sourceNode = audioCtx.createMediaElementSource(audioEl);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 128;
+        analyser.smoothingTimeConstant = 0.78;
+        sourceNode.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+      }
+      if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+    }catch(e){
+      useFallbackViz = true;
+      fallbackNote.style.display = 'block';
+    }
+  }
+
+  async function beginPlayback(){
+    setupAnalyser();
+    try{
+      audioEl.currentTime = 0;
+      audioEl.volume = AUDIO_CONFIG.volume;
+      await audioEl.play();
+      document.body.classList.add('playing');
+      setPlayingUI(true);
+      startViz();
+    }catch(err){
+      showIntroError("This browser blocked playback, or audio.mp3 could not be found. Please add audio.mp3 next to index.html and try again.");
+    }
+  }
+
+  startBtn.addEventListener('click', beginPlayback);
+  startBtn.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); beginPlayback(); }
+  });
+
+  audioEl.addEventListener('error', function(){
+    showIntroError("audio.mp3 could not be loaded. Make sure the file exists in the same folder as this page.");
+  });
+
+  function setPlayingUI(isPlaying){
+    iconPause.style.display = isPlaying ? 'block' : 'none';
+    iconPlay.style.display  = isPlaying ? 'none'  : 'block';
+    playToggle.setAttribute('aria-label', isPlaying ? 'Pause audio' : 'Resume audio');
+    statusDot.classList.toggle('paused', !isPlaying);
+    statusText.textContent = isPlaying ? 'NOW PLAYING' : 'PAUSED';
+  }
+
+  playToggle.addEventListener('click', function(){
+    if(audioEl.paused){
+      if(audioCtx && audioCtx.state === 'suspended'){ audioCtx.resume(); }
+      audioEl.play().then(()=> setPlayingUI(true)).catch(()=>{});
+    }else{
+      audioEl.pause();
+      setPlayingUI(false);
+    }
+  });
+
+  restartBtn.addEventListener('click', function(){
+    audioEl.currentTime = 0;
+    if(audioEl.paused){
+      audioEl.play().then(()=> setPlayingUI(true)).catch(()=>{});
+    }
+  });
+
+  volumeSlider.addEventListener('input', function(){
+    audioEl.volume = volumeSlider.value / 100;
+  });
+
+  /* ---------------- circular waveform visualizer ---------------- */
+  function startViz(){
+    if(rafId) cancelAnimationFrame(rafId);
+    const W = vizCanvas.width, H = vizCanvas.height;
+    const cx = W/2, cy = H/2;
+    const baseR = W * 0.26;
+    const bars = 64;
+    let t = 0;
+
+    function draw(){
+      rafId = requestAnimationFrame(draw);
+      vizCtx.clearRect(0,0,W,H);
+
+      let values;
+      if(analyser && !useFallbackViz){
+        analyser.getByteFrequencyData(dataArray);
+        values = dataArray;
+      }else{
+        t += 0.04;
+        values = new Uint8Array(bars);
+        for(let i=0;i<bars;i++){
+          values[i] = 60 + 50*Math.sin(t + i*0.35) + 30*Math.sin(t*1.7 + i*0.12);
+        }
+      }
+
+      // outer glow ring
+      vizCtx.beginPath();
+      vizCtx.arc(cx, cy, baseR - 6, 0, Math.PI*2);
+      vizCtx.strokeStyle = 'rgba(201,160,91,0.22)';
+      vizCtx.lineWidth = 1;
+      vizCtx.stroke();
+
+      const len = values.length;
+      const step = audioEl.paused ? 0.35 : 1;
+
+      for(let i=0;i<bars;i++){
+        const idx = Math.floor(i / bars * len);
+        const v = (values[idx] || 0) / 255;
+        const angle = (i / bars) * Math.PI * 2 - Math.PI/2;
+        const barH = (8 + v * (baseR*0.62)) * step;
+        const x1 = cx + Math.cos(angle) * baseR;
+        const y1 = cy + Math.sin(angle) * baseR;
+        const x2 = cx + Math.cos(angle) * (baseR + barH);
+        const y2 = cy + Math.sin(angle) * (baseR + barH);
+
+        const grad = vizCtx.createLinearGradient(x1,y1,x2,y2);
+        grad.addColorStop(0, 'rgba(201,160,91,0.15)');
+        grad.addColorStop(1, 'rgba(232,201,138,0.95)');
+
+        vizCtx.strokeStyle = grad;
+        vizCtx.lineWidth = 2.4;
+        vizCtx.lineCap = 'round';
+        vizCtx.beginPath();
+        vizCtx.moveTo(x1,y1);
+        vizCtx.lineTo(x2,y2);
+        vizCtx.stroke();
+      }
+
+      // center core
+      const avg = Array.from(values).reduce((a,b)=>a+b,0) / values.length / 255;
+      const coreR = (baseR*0.5) + avg * 14 * step;
+      const coreGrad = vizCtx.createRadialGradient(cx,cy,0,cx,cy,coreR);
+      coreGrad.addColorStop(0, 'rgba(232,201,138,0.35)');
+      coreGrad.addColorStop(1, 'rgba(232,201,138,0)');
+      vizCtx.fillStyle = coreGrad;
+      vizCtx.beginPath();
+      vizCtx.arc(cx,cy,coreR,0,Math.PI*2);
+      vizCtx.fill();
+    }
+    draw();
+  }
+
+  /* ---------------- ambient background particles ---------------- */
+  (function particles(){
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let W, H, dots = [];
+
+    function resize(){
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const count = window.innerWidth < 600 ? 26 : 48;
+    for(let i=0;i<count;i++){
+      dots.push({
+        x: Math.random()*W,
+        y: Math.random()*H,
+        r: Math.random()*1.4 + 0.4,
+        vx: (Math.random()-0.5)*0.06,
+        vy: (Math.random()-0.5)*0.06,
+        a: Math.random()*0.5 + 0.15
+      });
+    }
+
+    function loop(){
+      requestAnimationFrame(loop);
+      ctx.clearRect(0,0,W,H);
+      for(const d of dots){
+        d.x += d.vx; d.y += d.vy;
+        if(d.x < 0) d.x = W; if(d.x > W) d.x = 0;
+        if(d.y < 0) d.y = H; if(d.y > H) d.y = 0;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(201,160,91,${d.a})`;
+        ctx.fill();
+      }
+    }
+    loop();
+  })();
+
+})();
+</script>
+</body>
+</html>
