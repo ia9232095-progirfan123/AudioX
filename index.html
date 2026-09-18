@@ -274,12 +274,6 @@
   .ctrl-btn:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:3px; }
   .ctrl-btn svg{ width:18px; height:18px; }
 
-  #playToggle{
-    width:54px; height:54px;
-    border-color:var(--gold);
-    color:var(--gold-soft);
-  }
-
   .vol-wrap{ display:flex; align-items:center; gap:0.6rem; }
   .vol-wrap svg{ width:16px; height:16px; color:var(--ink-dim); flex-shrink:0; }
 
@@ -359,11 +353,6 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-9.36L1 10"></path></svg>
     </button>
 
-    <button class="ctrl-btn" id="playToggle" aria-label="Pause audio">
-      <svg id="iconPause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>
-      <svg id="iconPlay" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M8 5v14l11-7z"></path></svg>
-    </button>
-
     <div class="vol-wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="4 9 8 9 12 5 12 19 8 15 4 15 4 9"></polygon><path d="M17 8a5 5 0 0 1 0 8"></path></svg>
       <input type="range" id="volumeSlider" min="0" max="100" value="100" aria-label="Volume">
@@ -394,9 +383,6 @@ const AUDIO_CONFIG = {
   const audioEl      = document.getElementById('audioEl');
   const startBtn      = document.getElementById('startBtn');
   const introError     = document.getElementById('introError');
-  const playToggle     = document.getElementById('playToggle');
-  const iconPlay       = document.getElementById('iconPlay');
-  const iconPause      = document.getElementById('iconPause');
   const restartBtn     = document.getElementById('restartBtn');
   const volumeSlider   = document.getElementById('volumeSlider');
   const statusDot      = document.getElementById('statusDot');
@@ -462,22 +448,9 @@ const AUDIO_CONFIG = {
   });
 
   function setPlayingUI(isPlaying){
-    iconPause.style.display = isPlaying ? 'block' : 'none';
-    iconPlay.style.display  = isPlaying ? 'none'  : 'block';
-    playToggle.setAttribute('aria-label', isPlaying ? 'Pause audio' : 'Resume audio');
     statusDot.classList.toggle('paused', !isPlaying);
     statusText.textContent = isPlaying ? 'NOW PLAYING' : 'PAUSED';
   }
-
-  playToggle.addEventListener('click', function(){
-    if(audioEl.paused){
-      if(audioCtx && audioCtx.state === 'suspended'){ audioCtx.resume(); }
-      audioEl.play().then(()=> setPlayingUI(true)).catch(()=>{});
-    }else{
-      audioEl.pause();
-      setPlayingUI(false);
-    }
-  });
 
   restartBtn.addEventListener('click', function(){
     audioEl.currentTime = 0;
